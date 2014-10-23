@@ -3,14 +3,16 @@ package simpzan.android.notes;
 import java.util.Date;
 
 import io.realm.RealmObject;
+import io.realm.annotations.RealmClass;
 
 /**
  * Created by guoqing.zgg on 2014/10/22.
  */
+@RealmClass
 public class NoteRealmObject extends RealmObject {
     private String title;
     private String content;
-    private Date modified;
+    private long modified;
     private long id;
 
     public String getTitle() {
@@ -21,11 +23,11 @@ public class NoteRealmObject extends RealmObject {
         this.title = title;
     }
 
-    public Date getModified() {
+    public long getModified() {
         return modified;
     }
 
-    public void setModified(Date modified) {
+    public void setModified(long modified) {
         this.modified = modified;
     }
 

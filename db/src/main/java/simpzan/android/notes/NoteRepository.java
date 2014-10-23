@@ -3,6 +3,7 @@ package simpzan.android.notes;
 import android.content.Context;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import io.realm.Realm;
@@ -19,6 +20,8 @@ public class NoteRepository implements INoteRepository {
         this.realm = Realm.getInstance(context);
     }
 
+    public NoteRepository(Realm realm) { this.realm = realm; }
+
     @Override
     public long createNote(Note note) {
         realm.beginTransaction();
@@ -31,7 +34,7 @@ public class NoteRepository implements INoteRepository {
     private void mapNoteToRealmObject(Note note, NoteRealmObject noteObj) {
         noteObj.setTitle(note.getTitle());
         noteObj.setContent(note.getContent());
-        noteObj.setModified(note.getModified());
+        noteObj.setModified(note.getModified().getTime());
         noteObj.setId(note.getId());
     }
 
@@ -54,8 +57,10 @@ public class NoteRepository implements INoteRepository {
     }
 
     private Note convertToNote(NoteRealmObject note) {
+        if (note == null)  return null;
+
         Note result = new Note(note.getTitle());
-        result.setModified(note.getModified());
+        result.setModified(new Date(note.getModified()));
         result.setContent(note.getContent());
         result.setId(note.getId());
         return result;
