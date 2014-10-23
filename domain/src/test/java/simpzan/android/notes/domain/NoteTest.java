@@ -1,9 +1,11 @@
-package simpzan.android.notes;
+package simpzan.android.notes.domain;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Date;
+
+import simpzan.android.notes.domain.Note;
 
 public class NoteTest {
     @Test
@@ -18,7 +20,7 @@ public class NoteTest {
 
     private void assertDatesAlmostEqual(Date expected, Date actual) {
         long diff = expected.getTime() - actual.getTime();
-        Assert.assertTrue(Math.abs(diff) < 10);
+        Assert.assertTrue(Math.abs(diff) < 100);
     }
 
     @Test

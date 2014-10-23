@@ -1,13 +1,13 @@
-package simpzan.android.notes;
+package simpzan.android.notes.db;
 
 import android.test.AndroidTestCase;
 
 import junit.framework.Assert;
-import junit.framework.TestCase;
 
 import java.util.List;
 
 import io.realm.Realm;
+import simpzan.android.notes.domain.Note;
 
 public class NoteRepositoryTest extends AndroidTestCase {
 

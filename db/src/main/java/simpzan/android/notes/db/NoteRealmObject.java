@@ -1,4 +1,4 @@
-package simpzan.android.notes;
+package simpzan.android.notes.db;
 
 import java.util.Date;
 

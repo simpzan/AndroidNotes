@@ -1,4 +1,4 @@
-package simpzan.android.notes;
+package simpzan.android.notes.db;
 
 import android.content.Context;
 
@@ -9,12 +9,15 @@ import java.util.List;
 import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
+import simpzan.android.notes.domain.INoteRepository;
+import simpzan.android.notes.domain.Note;
 
 /**
  * Created by guoqing.zgg on 2014/10/22.
  */
 public class NoteRepository implements INoteRepository {
     private Realm realm;
+
 
     public NoteRepository(Context context) {
         this.realm = Realm.getInstance(context);

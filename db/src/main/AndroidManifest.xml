@@ -1,9 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="simpzan.android.notes">
+    package="simpzan.android.notes.db">
 
-    <application android:allowBackup="true"
-        android:label="app">
-
-    </application>
 
 </manifest>

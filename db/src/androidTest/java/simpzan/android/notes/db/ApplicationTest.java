@@ -1,4 +1,4 @@
-package simpzan.android.notes;
+package simpzan.android.notes.db;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
