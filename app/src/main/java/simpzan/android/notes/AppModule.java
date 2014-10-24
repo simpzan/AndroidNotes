@@ -6,7 +6,7 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
-import simpzan.android.notes.db.NoteRepository;
+import simpzan.android.notes.db.RealmNoteRepository;
 import simpzan.android.notes.domain.INoteRepository;
 import simpzan.android.notes.domain.NoteManager;
 import simpzan.android.notes.ui.NoteDetailActivity;
@@ -39,7 +39,7 @@ public class AppModule {
 
     @Provides
     INoteRepository provideNoteRepository(Context context) {
-        INoteRepository repo = new NoteRepository(context);
+        INoteRepository repo = new RealmNoteRepository(context);
         return repo;
     }
 

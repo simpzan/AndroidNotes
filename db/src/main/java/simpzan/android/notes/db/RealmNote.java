@@ -7,7 +7,7 @@ import io.realm.annotations.RealmClass;
  * Created by guoqing.zgg on 2014/10/22.
  */
 @RealmClass
-public class NoteRealmObject extends RealmObject {
+public class RealmNote extends RealmObject {
     private String title;
     private String content;
     private long modified;

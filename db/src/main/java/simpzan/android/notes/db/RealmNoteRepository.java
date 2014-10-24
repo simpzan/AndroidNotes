@@ -16,21 +16,21 @@ import simpzan.android.notes.domain.Note;
 /**
  * Created by guoqing.zgg on 2014/10/22.
  */
-public class NoteRepository implements INoteRepository {
-    private static final String TAG = NoteRepository.class.getSimpleName();
+public class RealmNoteRepository implements INoteRepository {
+    private static final String TAG = RealmNoteRepository.class.getSimpleName();
     static private long nextId;
     private Realm realm;
 
-    public NoteRepository(Context context) {
+    public RealmNoteRepository(Context context) {
         this(Realm.getInstance(context));
     }
 
-    public NoteRepository(Realm realm) {
+    public RealmNoteRepository(Realm realm) {
         this.realm = realm;
         initIdGenerator();
     }
     private void initIdGenerator() {
-        long max = realm.where(NoteRealmObject.class).findAll().max("id").longValue();
+        long max = realm.where(RealmNote.class).findAll().max("id").longValue();
         nextId = max + 1;
     }
     private long generateUniqueId() {
@@ -42,13 +42,13 @@ public class NoteRepository implements INoteRepository {
         note.setId(generateUniqueId());
         Log.d(TAG, "creating note:" + note);
         realm.beginTransaction();
-        NoteRealmObject noteObj = realm.createObject(NoteRealmObject.class);
+        RealmNote noteObj = realm.createObject(RealmNote.class);
         mapNoteToRealmObject(note, noteObj);
         realm.commitTransaction();
         return 0;
     }
 
-    private void mapNoteToRealmObject(Note note, NoteRealmObject noteObj) {
+    private void mapNoteToRealmObject(Note note, RealmNote noteObj) {
         noteObj.setTitle(note.getTitle());
         noteObj.setContent(note.getContent());
         noteObj.setModified(note.getModified().getTime());
@@ -57,25 +57,25 @@ public class NoteRepository implements INoteRepository {
 
     @Override
     public Note findNoteById(long id) {
-        RealmQuery<NoteRealmObject> query = findNoteRealmObjects("id", id);
+        RealmQuery<RealmNote> query = findNoteRealmObjects("id", id);
         Note note = convertToNote(query.findFirst());
         Log.d(TAG, "findNoteById result:" + note);
         return note;
     }
 
-    private RealmQuery<NoteRealmObject> findNoteRealmObjects(String field, long id) {
-        return realm.where(NoteRealmObject.class).equalTo(field, id);
+    private RealmQuery<RealmNote> findNoteRealmObjects(String field, long id) {
+        return realm.where(RealmNote.class).equalTo(field, id);
     }
 
-    private List<Note> convertToNotes(RealmResults<NoteRealmObject> results) {
+    private List<Note> convertToNotes(RealmResults<RealmNote> results) {
         List<Note> notes = new ArrayList<Note>();
-        for (NoteRealmObject note : results) {
+        for (RealmNote note : results) {
             notes.add(convertToNote(note));
         }
         return notes;
     }
 
-    private Note convertToNote(NoteRealmObject note) {
+    private Note convertToNote(RealmNote note) {
         if (note == null)  return null;
 
         Note result = new Note(note.getTitle());
@@ -87,17 +87,17 @@ public class NoteRepository implements INoteRepository {
 
     @Override
     public List<Note> findAllNotes() {
-        RealmQuery<NoteRealmObject> query = realm.where(NoteRealmObject.class);
-        RealmResults<NoteRealmObject> results = query.findAll();
+        RealmQuery<RealmNote> query = realm.where(RealmNote.class);
+        RealmResults<RealmNote> results = query.findAll();
         Log.d(TAG, "findAllNotes - found:" + results.size());
-        RealmResults<NoteRealmObject> sorted = results.sort("modified", RealmResults.SORT_ORDER_DECENDING);
+        RealmResults<RealmNote> sorted = results.sort("modified", RealmResults.SORT_ORDER_DECENDING);
         return convertToNotes(sorted);
     }
 
     @Override
     public void updateNote(Note note) {
         Log.d(TAG, "updateNote: " + note);
-        NoteRealmObject noteObj = findNoteRealmObjects("id", note.getId()).findFirst();
+        RealmNote noteObj = findNoteRealmObjects("id", note.getId()).findFirst();
         realm.beginTransaction();
         mapNoteToRealmObject(note, noteObj);
         realm.commitTransaction();
@@ -105,8 +105,8 @@ public class NoteRepository implements INoteRepository {
 
     @Override
     public void deleteNote(long id) {
-        RealmQuery<NoteRealmObject> query = findNoteRealmObjects("id", id);
-        RealmResults<NoteRealmObject> results = query.findAll();
+        RealmQuery<RealmNote> query = findNoteRealmObjects("id", id);
+        RealmResults<RealmNote> results = query.findAll();
         if (results.size() == 0) {
             Log.e(TAG, "deleteNote - the note with id " + id + " not exist.");
             return;

@@ -9,10 +9,10 @@ import java.util.List;
 import io.realm.Realm;
 import simpzan.android.notes.domain.Note;
 
-public class NoteRepositoryTest extends AndroidTestCase {
+public class RealmNoteRepositoryTest extends AndroidTestCase {
 
     Note expectedNote;
-    NoteRepository repo;
+    RealmNoteRepository repo;
 
     @Override
     protected void setUp() throws Exception {
@@ -20,7 +20,7 @@ public class NoteRepositoryTest extends AndroidTestCase {
 
         expectedNote = new Note("title_test");
         Realm realm = Realm.getInstance(getContext(), toString());
-        repo = new NoteRepository(realm);
+        repo = new RealmNoteRepository(realm);
     }
 
     @Override
