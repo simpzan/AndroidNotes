@@ -1,7 +1,5 @@
 package simpzan.android.notes.db;
 
-import java.util.Date;
-
 import io.realm.RealmObject;
 import io.realm.annotations.RealmClass;
 

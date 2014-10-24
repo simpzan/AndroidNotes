@@ -12,7 +12,7 @@ public class Note {
         this.title = title;
         this.modified = new Date();
         this.content = "";
-        this.id = -1;
+        this.id = 0;
     }
 
     public String getTitle() {
