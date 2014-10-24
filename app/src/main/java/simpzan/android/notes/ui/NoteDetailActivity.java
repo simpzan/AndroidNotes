@@ -94,6 +94,7 @@ public class NoteDetailActivity extends BaseActivity {
         contentView = (EditText) findViewById(R.id.contentView);
         contentView.addTextChangedListener(textWatcher);
 
+        getActionBar().setDisplayHomeAsUpEnabled(true);
         listenKeyboardShowHideEvent();
     }
 
@@ -123,6 +124,8 @@ public class NoteDetailActivity extends BaseActivity {
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             return true;
+        } else if (id == android.R.id.home) {
+            finish();
         }
         return super.onOptionsItemSelected(item);
     }
