@@ -1,11 +1,8 @@
 package simpzan.android.notes.ui;
 
-import android.app.Activity;
-import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,18 +16,19 @@ import android.widget.TextView;
 
 import java.util.List;
 
-import simpzan.android.notes.domain.INoteRepository;
+import javax.inject.Inject;
+
+import simpzan.android.notes.R;
 import simpzan.android.notes.domain.Note;
 import simpzan.android.notes.domain.NoteManager;
-import simpzan.android.notes.db.NoteRepository;
-import simpzan.android.notes.R;
 
 
-public class NoteListActivity extends Activity {
+public class NoteListActivity extends BaseActivity {
 
     ListView noteListView;
     EditText quickInputView;
 
+    @Inject
     NoteManager noteManager;
 
     @Override
@@ -38,22 +36,26 @@ public class NoteListActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_list);
 
-        INoteRepository repo = new NoteRepository(this);
-        noteManager = new NoteManager(repo);
-
         initViews();
         updateViews();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateViews();
+    }
+
     private void initViews() {
-        noteListView = (ListView)findViewById(R.id.listView);
+        noteListView = (ListView) findViewById(R.id.listView);
         noteListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
+                Note note = (Note) noteListView.getItemAtPosition(position);
+                openNoteDetailActivity(note);
             }
         });
-        quickInputView = (EditText)findViewById(R.id.editText);
+        quickInputView = (EditText) findViewById(R.id.editText);
         quickInputView.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -68,8 +70,16 @@ public class NoteListActivity extends Activity {
         });
     }
 
+    private void openNoteDetailActivity(Note note) {
+        Intent intent = new Intent(this, NoteDetailActivity.class);
+        intent.putExtra(NoteDetailActivity.NOTE_ID, note.getId());
+        startActivity(intent);
+    }
+
     private void onEditTextEnterPressed() {
         String title = quickInputView.getText().toString();
+        if (title.length() == 0) return;
+
         Note note = new Note(title);
         noteManager.saveNote(note);
 
@@ -81,6 +91,21 @@ public class NoteListActivity extends Activity {
         final List<Note> notes = noteManager.findAllNotes();
         ListAdapter adapter = new NoteListAdapter(notes);
         noteListView.setAdapter(adapter);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.note_list, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_settings) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private class NoteListAdapter extends BaseAdapter {
@@ -109,33 +134,13 @@ public class NoteListActivity extends Activity {
         public View getView(int position, View convertView, ViewGroup parent) {
             TextView textView = null;
             if (convertView == null) {
-                LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                textView = (TextView) inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+                textView = (TextView) getLayoutInflater().inflate(android.R.layout.simple_list_item_1, parent, false);
             } else {
-                textView = (TextView)convertView;
+                textView = (TextView) convertView;
             }
             Note note = notes.get(position);
             textView.setText(note.getTitle());
             return textView;
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.note_list, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 }
