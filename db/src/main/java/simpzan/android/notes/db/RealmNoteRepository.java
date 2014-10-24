@@ -45,7 +45,7 @@ public class RealmNoteRepository implements INoteRepository {
         RealmNote noteObj = realm.createObject(RealmNote.class);
         mapNoteToRealmObject(note, noteObj);
         realm.commitTransaction();
-        return 0;
+        return note.getId();
     }
 
     private void mapNoteToRealmObject(Note note, RealmNote noteObj) {
