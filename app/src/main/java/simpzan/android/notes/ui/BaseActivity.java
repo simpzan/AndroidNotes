@@ -2,6 +2,7 @@ package simpzan.android.notes.ui;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import simpzan.android.notes.NotesApp;
 
@@ -14,5 +15,9 @@ public class BaseActivity extends Activity {
         super.onCreate(savedInstanceState);
         NotesApp app = (NotesApp) getApplication();
         app.inject(this);
+    }
+
+    protected void makeToast(String text) {
+        Toast.makeText(this, text, Toast.LENGTH_LONG);
     }
 }

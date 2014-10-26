@@ -14,6 +14,7 @@ import java.util.Date;
 
 import javax.inject.Inject;
 
+import simpzan.android.notes.AsyncNoteManager;
 import simpzan.android.notes.R;
 import simpzan.notes.domain.Note;
 import simpzan.notes.domain.NoteManager;
@@ -24,7 +25,10 @@ public class NoteDetailActivity extends BaseActivity {
     private static final String TAG = NoteDetailActivity.class.getSimpleName();
 
     @Inject
-    NoteManager noteManager;
+    AsyncNoteManager asyncNoteManager;
+//    @Inject
+//    NoteManager noteManager;
+
     private Note note;
     private boolean noteChanged = false;
     private boolean keyboardShowing = false;
@@ -37,9 +41,9 @@ public class NoteDetailActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_detail);
 
-        initData();
         initViews();
-        updateViews();
+        initData();
+//        updateViews();
     }
 
     @Override
@@ -55,17 +59,41 @@ public class NoteDetailActivity extends BaseActivity {
         note.setTitle(titleView.getText().toString());
         note.setContent(contentView.getText().toString());
         note.setModified(new Date());
-        noteManager.saveNote(note);
+
+        asyncNoteManager.saveNote(note, new AsyncNoteManager.CallBack<Note>() {
+            @Override
+            public void onSuccess(Note data) {
+
+            }
+
+            @Override
+            public void onException(Exception exception) {
+                makeToast("save note failed");
+            }
+        });
+//        noteManager.saveNote(note);
     }
 
     private void initData() {
         int notFound = -2;
-        long note_id = getIntent().getLongExtra(NOTE_ID, notFound);
+        final long note_id = getIntent().getLongExtra(NOTE_ID, notFound);
         if (note_id == notFound) {
             Log.w(TAG, "note id should be provided in intent.");
             return;
         }
-        note = noteManager.findNoteById(note_id);
+        asyncNoteManager.findNoteById(note_id, new AsyncNoteManager.CallBack<Note>() {
+            @Override
+            public void onSuccess(Note data) {
+                note = data;
+                updateViews();
+            }
+
+            @Override
+            public void onException(Exception exception) {
+                makeToast("note not found:" + note_id);
+            }
+        });
+//        note = noteManager.findNoteById(note_id);
     }
 
     private void updateViews() {

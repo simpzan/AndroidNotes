@@ -39,6 +39,12 @@ public class AppModule {
     }
 
     @Provides
+    @Singleton
+    AsyncNoteManager provideAsyncNoteManager(NoteManager manager) {
+        return new AsyncNoteManager(manager);
+    }
+
+    @Provides
     INoteRepository provideRealmNoteRepository(Context context) {
         INoteRepository repo = new SqliteNoteRepository(context);
         return repo;

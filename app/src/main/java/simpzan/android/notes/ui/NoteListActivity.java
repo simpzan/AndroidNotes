@@ -13,11 +13,13 @@ import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.List;
 
 import javax.inject.Inject;
 
+import simpzan.android.notes.AsyncNoteManager;
 import simpzan.android.notes.R;
 import simpzan.notes.domain.Note;
 import simpzan.notes.domain.NoteManager;
@@ -28,8 +30,11 @@ public class NoteListActivity extends BaseActivity {
     ListView noteListView;
     EditText quickInputView;
 
+//    @Inject
+//    NoteManager noteManager;
+
     @Inject
-    NoteManager noteManager;
+    AsyncNoteManager asyncNoteManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,16 +86,38 @@ public class NoteListActivity extends BaseActivity {
         if (title.length() == 0) return;
 
         Note note = new Note(title);
-        noteManager.saveNote(note);
+        asyncNoteManager.saveNote(note, new AsyncNoteManager.CallBack<Note>() {
+            @Override
+            public void onSuccess(Note data) {
+                updateViews();
+                quickInputView.setText("");
+            }
 
-        updateViews();
-        quickInputView.setText("");
+            @Override
+            public void onException(Exception exception) {
+                makeToast("save note failed");
+            }
+        });
+//        noteManager.saveNote(note);
+
+
     }
 
     private void updateViews() {
-        final List<Note> notes = noteManager.findAllNotes();
-        ListAdapter adapter = new NoteListAdapter(notes);
-        noteListView.setAdapter(adapter);
+        asyncNoteManager.findAllNotes(new AsyncNoteManager.CallBack<List<Note>>() {
+            @Override
+            public void onSuccess(List<Note> notes) {
+                ListAdapter adapter = new NoteListAdapter(notes);
+                noteListView.setAdapter(adapter);
+            }
+
+            @Override
+            public void onException(Exception exception) {
+                makeToast("find notes failed");
+            }
+        });
+//        final List<Note> notes = noteManager.findAllNotes();
+
     }
 
     @Override
@@ -132,7 +159,7 @@ public class NoteListActivity extends BaseActivity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            TextView textView = null;
+            TextView textView;
             if (convertView == null) {
                 textView = (TextView) getLayoutInflater().inflate(android.R.layout.simple_list_item_1, parent, false);
             } else {
