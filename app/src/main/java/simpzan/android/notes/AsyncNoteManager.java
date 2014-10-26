@@ -24,6 +24,20 @@ public class AsyncNoteManager {
         public void onException(final Exception exception);
     }
 
+    private static class MainThreadNotifier<T> {
+        void notify(final T result, final CallBack<T> callBack) {
+            if (callBack == null)  return;
+
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (result != null) callBack.onSuccess(result);
+                    else callBack.onException(new Exception());
+                }
+            });
+        }
+    }
+
     private static Handler mainHandler = new Handler(Looper.getMainLooper());
     private static ExecutorService backgroundExecutor = Executors.newSingleThreadExecutor();
     private NoteManager noteManager;
@@ -33,16 +47,7 @@ public class AsyncNoteManager {
             @Override
             public void run() {
                 noteManager.saveNote(note);
-                if (callBack == null)  return;
-
-                final boolean successful = true;
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (note != null) callBack.onSuccess(note);
-                        else callBack.onException(new Exception());
-                    }
-                });
+                new MainThreadNotifier<Note>().notify(note, callBack);
             }
         });
     }
@@ -52,15 +57,7 @@ public class AsyncNoteManager {
             @Override
             public void run() {
                 final Note note = noteManager.findNoteById(id);
-                if (callBack == null)  return;
-
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (note != null) callBack.onSuccess(note);
-                        else callBack.onException(new Exception());
-                    }
-                });
+                new MainThreadNotifier<Note>().notify(note, callBack);
             }
         });
     }
@@ -70,15 +67,7 @@ public class AsyncNoteManager {
             @Override
             public void run() {
                 final List<Note> notes = noteManager.findAllNotes();
-                if (callBack == null)  return;
-
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (notes != null) callBack.onSuccess(notes);
-                        else callBack.onException(new Exception());
-                    }
-                });
+                new MainThreadNotifier<List<Note>>().notify(notes, callBack);
             }
         });
     }
@@ -88,16 +77,7 @@ public class AsyncNoteManager {
             @Override
             public void run() {
                 noteManager.deleteNote(id);
-                if (callBack == null)  return;
-
-                final boolean successful = true;
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (successful) callBack.onSuccess(1);
-                        else callBack.onException(new Exception());
-                    }
-                });
+                new MainThreadNotifier<Integer>().notify(1, callBack);
             }
         });
     }
