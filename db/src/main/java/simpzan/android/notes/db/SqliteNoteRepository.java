@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import simpzan.android.notes.domain.INoteRepository;
-import simpzan.android.notes.domain.Note;
+import simpzan.notes.domain.INoteRepository;
+import simpzan.notes.domain.Note;
 
 /**
  * Created by guoqing.zgg on 2014/10/24.

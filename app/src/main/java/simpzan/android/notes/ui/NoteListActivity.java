@@ -19,8 +19,8 @@ import java.util.List;
 import javax.inject.Inject;
 
 import simpzan.android.notes.R;
-import simpzan.android.notes.domain.Note;
-import simpzan.android.notes.domain.NoteManager;
+import simpzan.notes.domain.Note;
+import simpzan.notes.domain.NoteManager;
 
 
 public class NoteListActivity extends BaseActivity {

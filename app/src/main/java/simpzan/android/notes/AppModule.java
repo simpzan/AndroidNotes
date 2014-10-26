@@ -8,8 +8,8 @@ import dagger.Module;
 import dagger.Provides;
 import simpzan.android.notes.db.RealmNoteRepository;
 import simpzan.android.notes.db.SqliteNoteRepository;
-import simpzan.android.notes.domain.INoteRepository;
-import simpzan.android.notes.domain.NoteManager;
+import simpzan.notes.domain.INoteRepository;
+import simpzan.notes.domain.NoteManager;
 import simpzan.android.notes.ui.NoteDetailActivity;
 import simpzan.android.notes.ui.NoteListActivity;
 
