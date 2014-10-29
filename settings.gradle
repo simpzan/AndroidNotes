@@ -1,1 +1,2 @@
-include ':app', ':domain', ':db'
+include ':app', ':domain', ':db', ':evernote'
+include ':evernote/libs/evernote-sdk-android'
