@@ -28,7 +28,7 @@ public class NoteManager {
         return localRepo.findNoteById(id);
     }
 
-    public void deleteNote(long id) {
-        localRepo.deleteNote(id);
+    public void deleteNote(Note note) {
+        localRepo.deleteNote(note);
     }
 }

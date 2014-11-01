@@ -15,6 +15,7 @@ import simpzan.notes.domain.Note;
 
 /**
  * Created by guoqing.zgg on 2014/10/24.
+ * Note repository backed by sqlite3.
  */
 public class SqliteNoteRepository extends SQLiteOpenHelper implements INoteRepository {
 
@@ -24,15 +25,18 @@ public class SqliteNoteRepository extends SQLiteOpenHelper implements INoteRepos
     private static final String TITLE = "title";
     private static final String CONTENT = "content";
     private static final String DB_NAME = "Notes.sqlite";
+    // todo: notes fields for server note info.
 
     public SqliteNoteRepository(Context context) {
         super(context, DB_NAME, null, 1);
     }
 
     @Override
-    public long createNote(Note note) {
+    public Note createNote(Note note) {
         ContentValues cv = serialize(note);
-        return getWritableDatabase().insert(TABLE_NOTES, null, cv);
+        long id = getWritableDatabase().insert(TABLE_NOTES, null, cv);
+        note.setId(id);
+        return note;
     }
 
     private ContentValues serialize(Note note) {
@@ -45,14 +49,13 @@ public class SqliteNoteRepository extends SQLiteOpenHelper implements INoteRepos
 
     @Override
     public Note findNoteById(long id) {
-        Cursor cursor = getReadableDatabase().query(TABLE_NOTES,
-                null,
-                ID + "=" + id,
-                null,
-                null,
-                null,
-                null,
-                "1");
+        return findNoteBy("id", String.valueOf(id));
+    }
+
+    @Override
+    public Note findNoteBy(String field, String value) {
+        String where = field + " = " + value;
+        Cursor cursor = getReadableDatabase().query(TABLE_NOTES, null, where, null, null, null, null, "1");
         if (cursor.getCount() < 1)  return null;
 
         cursor.moveToFirst();
@@ -90,14 +93,16 @@ public class SqliteNoteRepository extends SQLiteOpenHelper implements INoteRepos
     }
 
     @Override
-    public void updateNote(Note note) {
+    public Note updateNote(Note note) {
         ContentValues cv = serialize(note);
         getWritableDatabase().update(TABLE_NOTES, cv, ID + "=" + note.getId(), null);
+        return note;
     }
 
     @Override
-    public void deleteNote(long id) {
-        getWritableDatabase().delete(TABLE_NOTES, ID + "=" + id, null);
+    public void deleteNote(Note note) {
+        String where = ID + "=" + note.getId();
+        getWritableDatabase().delete(TABLE_NOTES, where, null);
     }
 
     @Override

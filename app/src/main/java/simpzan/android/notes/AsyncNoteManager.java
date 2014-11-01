@@ -72,13 +72,15 @@ public class AsyncNoteManager {
         });
     }
 
-    public void deleteNote(final long id, final CallBack<Integer> callBack) {
+    public void deleteNote(final Note note, final CallBack<Integer> callBack) {
         backgroundExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                noteManager.deleteNote(id);
+                noteManager.deleteNote(note);
                 new MainThreadNotifier<Integer>().notify(1, callBack);
             }
         });
     }
+
+
 }

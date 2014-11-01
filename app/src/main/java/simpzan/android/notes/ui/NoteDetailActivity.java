@@ -104,8 +104,7 @@ public class NoteDetailActivity extends BaseActivity {
     private void initViews() {
         TextWatcher textWatcher = new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -114,8 +113,7 @@ public class NoteDetailActivity extends BaseActivity {
             }
 
             @Override
-            public void afterTextChanged(Editable s) {
-            }
+            public void afterTextChanged(Editable s) { }
         };
         titleView = (EditText) findViewById(R.id.titleView);
         titleView.addTextChangedListener(textWatcher);
