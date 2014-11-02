@@ -18,6 +18,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.evernote.client.android.EvernoteSession;
+import com.evernote.client.android.InvalidAuthenticationException;
 
 import java.util.List;
 import java.util.Locale;
@@ -28,6 +29,7 @@ import javax.inject.Inject;
 
 import simpzan.android.notes.AsyncNoteManager;
 import simpzan.android.notes.R;
+import simpzan.android.notes.evernote.EvernoteNoteRepository;
 import simpzan.notes.domain.Note;
 import simpzan.notes.domain.SyncManager;
 
@@ -41,6 +43,8 @@ public class NoteListActivity extends BaseActivity {
     @Inject
     EvernoteSession evernoteSession;
     @Inject
+    EvernoteNoteRepository evernoteNoteRepository;
+    @Inject
     SyncManager syncManager;
 
     @Inject
@@ -52,9 +56,7 @@ public class NoteListActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_list);
 
-        test();
         initViews();
-        updateViews();
     }
 
     private void test() {
@@ -118,9 +120,6 @@ public class NoteListActivity extends BaseActivity {
                 makeToast("save note failed");
             }
         });
-//        noteManager.saveNote(note);
-
-
     }
 
     private void updateViews() {
@@ -136,8 +135,6 @@ public class NoteListActivity extends BaseActivity {
                 makeToast("find notes failed");
             }
         });
-//        final List<Note> notes = noteManager.findAllNotes();
-
     }
 
     @Override
@@ -149,13 +146,31 @@ public class NoteListActivity extends BaseActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_full_sync) {
+            fullSync();
+            return true;
+        } else if (id == R.id.action_logout) {
+            logout();
             return true;
         } else if (id == R.id.action_sync) {
             authenticateToEvernote();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void fullSync() {
+        evernoteNoteRepository.clearData();
+        syncWithEvernote();
+    }
+
+    private void logout() {
+        try {
+            evernoteSession.logOut(this);
+            evernoteNoteRepository.clearData();
+        } catch (InvalidAuthenticationException e) {
+            e.printStackTrace();
+        }
     }
 
     private void authenticateToEvernote() {
@@ -187,7 +202,7 @@ public class NoteListActivity extends BaseActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == EvernoteSession.REQUEST_CODE_OAUTH && resultCode == Activity.RESULT_OK) {
+        if (requestCode == EvernoteSession.REQUEST_CODE_OAUTH && resultCode == Activity.RESULT_OK) {
             syncWithEvernote();
         }
     }

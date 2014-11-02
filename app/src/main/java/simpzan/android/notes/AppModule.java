@@ -10,7 +10,6 @@ import dagger.Module;
 import dagger.Provides;
 import simpzan.android.notes.db.SqliteNoteRepository;
 import simpzan.android.notes.evernote.EvernoteNoteRepository;
-import simpzan.notes.domain.INoteRepository;
 import simpzan.notes.domain.NoteManager;
 import simpzan.android.notes.ui.NoteDetailActivity;
 import simpzan.android.notes.ui.NoteListActivity;
@@ -31,14 +30,15 @@ public class AppModule {
 
     public AppModule(Context context) { this.context = context; }
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     Context provideContext() {
         return context;
     }
 
     @Provides
     @Singleton
-    NoteManager provideNoteManager(INoteRepository repo) {
+    NoteManager provideNoteManager(SqliteNoteRepository repo) {
         return new NoteManager(repo);
     }
 
@@ -49,18 +49,14 @@ public class AppModule {
     }
 
     @Provides
-    INoteRepository provideNoteRepository(Context context) {
-        INoteRepository repo = new SqliteNoteRepository(context);
-        return repo;
-    }
-
-    @Provides
+    @Singleton
     EvernoteNoteRepository provideEvernoteNoteRepository(Context context, EvernoteSession session) {
         EvernoteNoteRepository repo = new EvernoteNoteRepository(context, session);
         return repo;
     }
 
     @Provides
+    @Singleton
     SqliteNoteRepository provideSqliteNoteRepository(Context context) {
         SqliteNoteRepository repo = new SqliteNoteRepository(context);
         return repo;

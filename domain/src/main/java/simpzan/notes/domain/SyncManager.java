@@ -1,7 +1,6 @@
 package simpzan.notes.domain;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -60,10 +59,10 @@ public class SyncManager {
         LOGGER.info("downloaded and merging remote notes; " + remoteNotes);
         for (Note remoteNote : remoteNotes) {
             Note localNote = localRepo.findNoteBy("guid", "\"" + remoteNote.getGuid() +"\"");
-            if (localNote == null) {    // remote new
-                localRepo.createNote(remoteNote);
-            } else if (remoteNote.isDeleted()) {    // remote delete
+            if (remoteNote.isDeleted()) {    // remote delete
                 handleRemoteDelete(localNote, remoteNote);
+            } else if (localNote == null) {    // remote new
+                localRepo.createNote(remoteNote);
             } else if (remoteNote.getUpdateSequenceNumber() > localNote.getUpdateSequenceNumber()) {    // remote update
                 handleRemoteUpdate(localNote, remoteNote);
             }
@@ -72,15 +71,19 @@ public class SyncManager {
     }
 
     private void handleRemoteUpdate(Note localNote, Note remoteNote) {
+        remoteNote.setId(localNote.getId());
         // conflict 2: remote update, local delete: preserve remote.
         if (localNote.isDeleted()) {
             localRepo.updateNote(remoteNote);
         }
         // conflict 3: remote update, local update: keep both. so turn local to new note, and save remote note in local repo.
         else if (localNote.isUpdated()) {
-            localNote.setNew();
-            localRepo.createNote(localNote);
+            remoteNote.setTitle(remoteNote.getTitle() + "-remote");
             localRepo.updateNote(remoteNote);
+
+            localNote.setNew();
+            localNote.setTitle(localNote.getTitle() + "-local");
+            localRepo.createNote(localNote);
         }
         else {
             localRepo.updateNote(remoteNote);
@@ -88,6 +91,7 @@ public class SyncManager {
     }
 
     private void handleRemoteDelete(Note localNote, Note remoteNote) {
+        if (localNote == null)  return;
         // conflict 1: remote delete, local update: preserve local. so just return.
         if (localNote.isUpdated()) return;
 

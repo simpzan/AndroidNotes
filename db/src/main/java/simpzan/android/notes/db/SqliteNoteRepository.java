@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,6 +32,7 @@ public class SqliteNoteRepository extends SQLiteOpenHelper implements INoteRepos
     private static final String COLUMN_USN = "updateSequenceNumber";
     private static final String COLUMN_DELETED = "deleted";
     private static final String COLUMN_DIRTY = "dirty";
+    private static final String TAG = SqliteNoteRepository.class.getName();
 
     public SqliteNoteRepository(Context context) {
         super(context, DB_NAME, null, 1);
@@ -38,6 +40,7 @@ public class SqliteNoteRepository extends SQLiteOpenHelper implements INoteRepos
 
     @Override
     public Note createNote(Note note) {
+        Log.i(TAG, "createNote:" + note);
         ContentValues cv = serialize(note);
         long id = getWritableDatabase().insert(TABLE_NOTES, null, cv);
         note.setId(id);
@@ -68,6 +71,8 @@ public class SqliteNoteRepository extends SQLiteOpenHelper implements INoteRepos
 
         cursor.moveToFirst();
         Note note = createNoteFromCursor(cursor);
+        Log.i(TAG, "findNote:" + note);
+
         cursor.close();
         return note;
     }
@@ -86,9 +91,11 @@ public class SqliteNoteRepository extends SQLiteOpenHelper implements INoteRepos
         Cursor cursor = getQueryCursor(field, value);
         if (cursor == null)  return new ArrayList<Note>();
 
-        List<Note> result = convert2Notes(cursor);
+        List<Note> notes = convert2Notes(cursor);
+        Log.i(TAG, "findNote:" + notes);
+
         cursor.close();
-        return result;
+        return notes;
     }
 
     @Override
@@ -96,6 +103,8 @@ public class SqliteNoteRepository extends SQLiteOpenHelper implements INoteRepos
         Cursor cursor = getReadableDatabase().query(TABLE_NOTES,
                 null, null, null, null, null, COLUMN_MODIFIED + " desc");
         List<Note> notes = convert2Notes(cursor);
+        Log.i(TAG, "findNote:" + notes);
+
         cursor.close();
         return notes;
     }
@@ -138,6 +147,8 @@ public class SqliteNoteRepository extends SQLiteOpenHelper implements INoteRepos
 
     @Override
     public Note updateNote(Note note) {
+        Log.i(TAG, "updateNote:" + note);
+
         ContentValues cv = serialize(note);
         getWritableDatabase().update(TABLE_NOTES, cv, COLUMN_ID + " = " + note.getId(), null);
         return note;
@@ -145,21 +156,24 @@ public class SqliteNoteRepository extends SQLiteOpenHelper implements INoteRepos
 
     @Override
     public void deleteNote(Note note) {
+        Log.i(TAG, "deleteNote:" + note);
+
         String where = COLUMN_ID + "=" + note.getId();
         getWritableDatabase().delete(TABLE_NOTES, where, null);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("create table " + TABLE_NOTES +
+        String sql = "create table " + TABLE_NOTES +
                 "(" + COLUMN_ID + " integer primary key autoincrement, " +
                 COLUMN_TITLE + " text not null, " +
                 COLUMN_CONTENT + " text, " +
-                COLUMN_MODIFIED + " integer" +
+                COLUMN_MODIFIED + " integer, " +
                 COLUMN_GUID + " text, " +
                 COLUMN_USN + " integer, " +
                 COLUMN_DELETED + " integer, " +
-                COLUMN_DIRTY + " integer)");
+                COLUMN_DIRTY + " integer)";
+        db.execSQL(sql);
     }
 
     @Override

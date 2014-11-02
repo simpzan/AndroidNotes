@@ -29,21 +29,32 @@ import simpzan.notes.domain.Note;
 public class EvernoteNoteRepository implements INoteRepository {
     public static final String CONSUMER_KEY = "simpzan-9925";
     public static final String CONSUMER_SECRET = "60e4fa505ecb18b2";
+    /**
+     * The ENML preamble to every Evernote note.
+     * Note content goes between <en-note> and </en-note>
+     */
+    public static final String NOTE_PREFIX =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+                    "<!DOCTYPE en-note SYSTEM \"http://xml.evernote.com/pub/enml2.dtd\">" +
+                    "<en-note>";
+
+    /**
+     * The ENML postamble to every Evernote note
+     */
+    public static final String NOTE_SUFFIX = "</en-note>";
 
     private static final String KEY_LAST_UPDATE_COUNT = "last_update_count";
     private static final String TAG = EvernoteNoteRepository.class.getSimpleName();
     private final EvernoteSession evernoteSession;
-    private final String authenticateToken;
     private final SharedPreferences preferences;
     private List<String> tagNames = new ArrayList<String>();
 
 
     public EvernoteNoteRepository(Context context, EvernoteSession session) {
         this.evernoteSession = session;
-        this.authenticateToken = evernoteSession.getAuthToken();
         tagNames.add("AndroidNotes");
         tagNames.add("simpzan");
-        preferences = context.getApplicationContext().getSharedPreferences(EvernoteNoteRepository.class.getName(), 0);
+        preferences = context.getApplicationContext().getSharedPreferences(TAG, 0);
     }
 
     private NoteStore.Client getNoteStore() {
@@ -55,13 +66,18 @@ public class EvernoteNoteRepository implements INoteRepository {
         return null;
     }
 
+    private String getAuthToken() {
+        return evernoteSession.getAuthToken();
+    }
+
     public Note createNote(Note note) {
-        Log.i(TAG, "creating: " + note);
         com.evernote.edam.type.Note enNote = convertToEvernote(note);
+        Log.i(TAG, "creating: " + enNote);
         try {
-            enNote = getNoteStore().createNote(authenticateToken, enNote);
+            enNote = getNoteStore().createNote(getAuthToken(), enNote);
             checkUpdateCount(enNote.getUpdateSequenceNum());
-            return convertToDomainNote(enNote);
+            updateNoteWithEvernote(note, enNote);
+            return note;
         } catch (EDAMUserException e) {
             e.printStackTrace();
         } catch (EDAMSystemException e) {
@@ -74,10 +90,17 @@ public class EvernoteNoteRepository implements INoteRepository {
         return null;
     }
 
+    private void updateNoteWithEvernote(Note note, com.evernote.edam.type.Note enNote) {
+        note.setGuid(enNote.getGuid());
+        note.setUpdateSequenceNumber(enNote.getUpdateSequenceNum());
+        note.setDirty(false);
+    }
+
     private com.evernote.edam.type.Note convertToEvernote(Note note) {
         com.evernote.edam.type.Note enNote = new com.evernote.edam.type.Note();
         enNote.setTitle(note.getTitle());
         // todo: content
+        enNote.setContent(NOTE_PREFIX + NOTE_SUFFIX);
         enNote.setUpdated(note.getModified().getTime());
         enNote.setGuid(note.getGuid());
         enNote.setTagNames(tagNames);
@@ -114,7 +137,7 @@ public class EvernoteNoteRepository implements INoteRepository {
     public List<Note> findAllNotes() {
         SyncState syncState;
         try {
-            syncState = getNoteStore().getSyncState(authenticateToken);
+            syncState = getNoteStore().getSyncState(getAuthToken());
             int lastUpdateCount = loadUpdateCount();
             int thisUpdateCount = syncState.getUpdateCount();
 
@@ -141,7 +164,7 @@ public class EvernoteNoteRepository implements INoteRepository {
         for (int usn = lastUpdateCount;
                 usn < updateCount;
                 usn = chunk.getChunkHighUSN(), updateCount = chunk.getUpdateCount()) {
-            chunk = getNoteStore().getFilteredSyncChunk(authenticateToken, usn, 100, getSyncChunkFilter());
+            chunk = getNoteStore().getFilteredSyncChunk(getAuthToken(), usn, 100, getSyncChunkFilter());
             result.addAll(createDeletedNotes(chunk.getExpungedNotes()));
             result.addAll(convertToDomainNotes(chunk.getNotes()));
         }
@@ -159,6 +182,8 @@ public class EvernoteNoteRepository implements INoteRepository {
 
     private List<Note> convertToDomainNotes(List<com.evernote.edam.type.Note> notes) {
         List<Note> result = new ArrayList<Note>();
+        if (notes == null)  return result;
+
         for (com.evernote.edam.type.Note enNote : notes) {
             if (!isNoteTracked(enNote)) continue;
 
@@ -186,6 +211,7 @@ public class EvernoteNoteRepository implements INoteRepository {
             Note note = new Note("");
             note.setGuid(guid);
             note.setDeleted(true);
+            note.setDirty(false);
             result.add(note);
         }
         return result;
@@ -201,13 +227,13 @@ public class EvernoteNoteRepository implements INoteRepository {
 
     @Override
     public Note updateNote(Note note) {
-        Log.i(TAG, "updating: " + note);
-
         com.evernote.edam.type.Note enNote = convertToEvernote(note);
+        Log.i(TAG, "updating: " + enNote);
         try {
-            enNote = getNoteStore().updateNote(authenticateToken, enNote);
+            enNote = getNoteStore().updateNote(getAuthToken(), enNote);
             checkUpdateCount(enNote.getUpdateSequenceNum());
-            return convertToDomainNote(enNote);
+            updateNoteWithEvernote(note, enNote);
+            return note;
         } catch (EDAMUserException e) {
             e.printStackTrace();
         } catch (EDAMSystemException e) {
@@ -223,9 +249,8 @@ public class EvernoteNoteRepository implements INoteRepository {
     @Override
     public void deleteNote(Note note) {
         Log.i(TAG, "deleting: " + note);
-
         try {
-            int usn = getNoteStore().deleteNote(authenticateToken, note.getGuid());
+            int usn = getNoteStore().deleteNote(getAuthToken(), note.getGuid());
             checkUpdateCount(usn);
         } catch (EDAMUserException e) {
             e.printStackTrace();
@@ -245,5 +270,9 @@ public class EvernoteNoteRepository implements INoteRepository {
         } else {
             saveUpdateCount(usn + 1);
         }
+    }
+
+    public void clearData() {
+        preferences.edit().clear().commit();
     }
 }
