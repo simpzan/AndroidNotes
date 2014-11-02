@@ -1,7 +1,10 @@
 package simpzan.android.notes.ui;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,7 +16,8 @@ import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.evernote.client.android.EvernoteSession;
 
 import java.util.List;
 
@@ -22,19 +26,23 @@ import javax.inject.Inject;
 import simpzan.android.notes.AsyncNoteManager;
 import simpzan.android.notes.R;
 import simpzan.notes.domain.Note;
-import simpzan.notes.domain.NoteManager;
+import simpzan.notes.domain.SyncManager;
 
 
 public class NoteListActivity extends BaseActivity {
 
+    private static final String TAG = NoteListActivity.class.getSimpleName();
     ListView noteListView;
     EditText quickInputView;
 
-//    @Inject
-//    NoteManager noteManager;
+    @Inject
+    EvernoteSession evernoteSession;
+    @Inject
+    SyncManager syncManager;
 
     @Inject
     AsyncNoteManager asyncNoteManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,8 +139,45 @@ public class NoteListActivity extends BaseActivity {
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             return true;
+        } else if (id == R.id.action_sync) {
+            authenticateToEvernote();
+            return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void authenticateToEvernote() {
+        if (!evernoteSession.isLoggedIn()) {
+            evernoteSession.authenticate(this);
+        } else {
+            syncWithEvernote();
+        }
+    }
+
+    private void syncWithEvernote() {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                Log.w(TAG, "syncWithEvernote start");
+                syncManager.sync();
+                Log.w(TAG, "syncWithEvernote done");
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                updateViews();
+            }
+        }.execute();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == EvernoteSession.REQUEST_CODE_OAUTH && resultCode == Activity.RESULT_OK) {
+            syncWithEvernote();
+        }
     }
 
     private class NoteListAdapter extends BaseAdapter {
