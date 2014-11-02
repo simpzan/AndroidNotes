@@ -1,6 +1,8 @@
 package simpzan.notes.domain;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by guoqing.zgg on 2014/10/29.
@@ -15,6 +17,8 @@ import java.util.List;
  *  conflict 3: update  update  keep both, convert local note to new state.
  */
 public class SyncManager {
+    private final static Logger LOGGER = Logger.getLogger(SyncManager.class.getName());
+
     INoteRepository localRepo;
     INoteRepository remoteRepo;
 
@@ -29,33 +33,42 @@ public class SyncManager {
     }
 
     private void upload() {
-        List<Note> notes = localRepo.findAllNotes();
+        LOGGER.info("uploading start");
+
+        List<Note> notes = localRepo.findNotesBy("dirty", "1");
         for (Note note : notes) {
+            LOGGER.info("uploading local note; " + note.toString());
+
             if (note.isDeleted()) {    // local delete
                 remoteRepo.deleteNote(note);
                 localRepo.deleteNote(note);
             } else if (note.isNew()) {     // local new
                 Note createdNote = remoteRepo.createNote(note);
-                localRepo.updateNote(createdNote);
+                if (createdNote != null)  localRepo.updateNote(createdNote);
             } else if (note.isUpdated()) {    // local update
                 Note updatedNote = remoteRepo.updateNote(note);
-                localRepo.updateNote(updatedNote);
+                if (updatedNote != null)  localRepo.updateNote(updatedNote);
             }
         }
+
+        LOGGER.info("uploading end");
     }
 
     private void downloadAndMerge() {
+        LOGGER.info("download start");
         List<Note> remoteNotes = remoteRepo.findAllNotes();
+        LOGGER.info("downloaded and merging remote notes; " + remoteNotes);
         for (Note remoteNote : remoteNotes) {
-            Note localNote = localRepo.findNoteBy("guid", remoteNote.getGuid());
+            Note localNote = localRepo.findNoteBy("guid", "\"" + remoteNote.getGuid() +"\"");
             if (localNote == null) {    // remote new
                 localRepo.createNote(remoteNote);
-            } else if (!remoteNote.isDeleted()) {    // remote delete
+            } else if (remoteNote.isDeleted()) {    // remote delete
                 handleRemoteDelete(localNote, remoteNote);
             } else if (remoteNote.getUpdateSequenceNumber() > localNote.getUpdateSequenceNumber()) {    // remote update
                 handleRemoteUpdate(localNote, remoteNote);
             }
         }
+        LOGGER.info("merge end");
     }
 
     private void handleRemoteUpdate(Note localNote, Note remoteNote) {

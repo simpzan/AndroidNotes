@@ -20,6 +20,9 @@ import android.widget.TextView;
 import com.evernote.client.android.EvernoteSession;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.inject.Inject;
 
@@ -49,8 +52,17 @@ public class NoteListActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_list);
 
+        test();
         initViews();
         updateViews();
+    }
+
+    private void test() {
+        Logger logger = Logger.getLogger(NoteListActivity.class.getName());
+//        logger.setLevel(Level.FINEST);
+        Locale locale = Locale.getDefault();
+        logger.info("default locale:" + locale);
+        Log.d(TAG, "default locale:" + locale);
     }
 
     @Override

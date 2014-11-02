@@ -9,6 +9,7 @@ public interface INoteRepository {
     public Note createNote(Note note);
     public Note findNoteById(long id);
     public Note findNoteBy(String field, String value);
+    public List<Note> findNotesBy(String field, String value);
     public List<Note> findAllNotes();
     public Note updateNote(Note note);
     public void deleteNote(Note note);
