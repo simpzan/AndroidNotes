@@ -8,7 +8,6 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
-import simpzan.android.notes.db.RealmNoteRepository;
 import simpzan.android.notes.db.SqliteNoteRepository;
 import simpzan.android.notes.evernote.EvernoteNoteRepository;
 import simpzan.notes.domain.INoteRepository;
@@ -19,6 +18,7 @@ import simpzan.notes.domain.SyncManager;
 
 /**
  * Created by guoqing.zgg on 2014/10/24.
+ * dagger module for providing constructors.
  */
 @Module(
     injects = {
@@ -26,8 +26,6 @@ import simpzan.notes.domain.SyncManager;
     }
 )
 public class AppModule {
-    private static final String CONSUMER_KEY = "simpzan-9925";
-    private static final String CONSUMER_SECRET = "60e4fa505ecb18b2";
 
     private Context context;
 
@@ -57,8 +55,8 @@ public class AppModule {
     }
 
     @Provides
-    EvernoteNoteRepository provideEvernoteNoteRepository(EvernoteSession session) {
-        EvernoteNoteRepository repo = new EvernoteNoteRepository(session);
+    EvernoteNoteRepository provideEvernoteNoteRepository(Context context, EvernoteSession session) {
+        EvernoteNoteRepository repo = new EvernoteNoteRepository(context, session);
         return repo;
     }
 
@@ -77,6 +75,10 @@ public class AppModule {
     @Provides
     @Singleton
     EvernoteSession providerEvernoteSession(Context context) {
-        return EvernoteSession.getInstance(context, CONSUMER_KEY, CONSUMER_SECRET, EvernoteSession.EvernoteService.SANDBOX, false);
+        return EvernoteSession.getInstance(context,
+                EvernoteNoteRepository.CONSUMER_KEY,
+                EvernoteNoteRepository.CONSUMER_SECRET,
+                EvernoteSession.EvernoteService.SANDBOX,
+                false);
     }
 }
