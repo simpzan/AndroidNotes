@@ -16,13 +16,13 @@ import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.evernote.client.android.EvernoteSession;
 import com.evernote.client.android.InvalidAuthenticationException;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
@@ -153,7 +153,7 @@ public class NoteListActivity extends BaseActivity {
             logout();
             return true;
         } else if (id == R.id.action_sync) {
-            authenticateToEvernote();
+            incrementalSync();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -173,7 +173,7 @@ public class NoteListActivity extends BaseActivity {
         }
     }
 
-    private void authenticateToEvernote() {
+    private void incrementalSync() {
         if (!evernoteSession.isLoggedIn()) {
             evernoteSession.authenticate(this);
         } else {
@@ -195,6 +195,7 @@ public class NoteListActivity extends BaseActivity {
             protected void onPostExecute(Void aVoid) {
                 super.onPostExecute(aVoid);
                 updateViews();
+                makeToast("Syncing done");
             }
         }.execute();
     }

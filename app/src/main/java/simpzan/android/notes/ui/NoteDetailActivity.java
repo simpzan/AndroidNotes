@@ -30,8 +30,6 @@ public class NoteDetailActivity extends BaseActivity {
 //    NoteManager noteManager;
 
     private Note note;
-    private boolean noteChanged = false;
-    private boolean keyboardShowing = false;
 
     private EditText titleView;
     private EditText contentView;
@@ -43,7 +41,6 @@ public class NoteDetailActivity extends BaseActivity {
 
         initViews();
         initData();
-//        updateViews();
     }
 
     @Override
@@ -54,16 +51,18 @@ public class NoteDetailActivity extends BaseActivity {
     }
 
     private void saveNote() {
-        if (!noteChanged) return;
+        String title = titleView.getText().toString();
+        String content = contentView.getText().toString();
+        if (title.equals(note.getTitle()) && content.equals(note.getContent())) return;
 
-        note.setTitle(titleView.getText().toString());
-        note.setContent(contentView.getText().toString());
+        note.setTitle(title);
+        note.setContent(content);
         note.setModified(new Date());
+        note.setDirty(true);
 
         asyncNoteManager.saveNote(note, new AsyncNoteManager.CallBack<Note>() {
             @Override
             public void onSuccess(Note data) {
-
             }
 
             @Override
@@ -71,7 +70,6 @@ public class NoteDetailActivity extends BaseActivity {
                 makeToast("save note failed");
             }
         });
-//        noteManager.saveNote(note);
     }
 
     private void initData() {
@@ -93,7 +91,6 @@ public class NoteDetailActivity extends BaseActivity {
                 makeToast("note not found:" + note_id);
             }
         });
-//        note = noteManager.findNoteById(note_id);
     }
 
     private void updateViews() {
@@ -102,51 +99,20 @@ public class NoteDetailActivity extends BaseActivity {
     }
 
     private void initViews() {
-        TextWatcher textWatcher = new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                Log.d(TAG, "onTextChanged");
-                if (keyboardShowing) noteChanged = true;
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) { }
-        };
         titleView = (EditText) findViewById(R.id.titleView);
-        titleView.addTextChangedListener(textWatcher);
         contentView = (EditText) findViewById(R.id.contentView);
-        contentView.addTextChangedListener(textWatcher);
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
-        listenKeyboardShowHideEvent();
-    }
-
-    private void listenKeyboardShowHideEvent() {
-        final View root = findViewById(R.id.root);
-        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                int heightDiff = root.getRootView().getHeight() - root.getHeight();
-                keyboardShowing = heightDiff > 100;
-            }
-        });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.note_detail, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             return true;

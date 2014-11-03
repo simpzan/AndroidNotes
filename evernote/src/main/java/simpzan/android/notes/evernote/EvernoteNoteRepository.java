@@ -12,6 +12,8 @@ import com.evernote.edam.notestore.NoteStore;
 import com.evernote.edam.notestore.SyncChunk;
 import com.evernote.edam.notestore.SyncChunkFilter;
 import com.evernote.edam.notestore.SyncState;
+import com.evernote.edam.type.NoteAttributes;
+import com.evernote.edam.type.Notebook;
 import com.evernote.thrift.TException;
 import com.evernote.thrift.transport.TTransportException;
 
@@ -45,9 +47,12 @@ public class EvernoteNoteRepository implements INoteRepository {
 
     private static final String KEY_LAST_UPDATE_COUNT = "last_update_count";
     private static final String TAG = EvernoteNoteRepository.class.getSimpleName();
+    private static final String KEY_NOTEBOOK_GUID = "notebook_guid";
+    private static final String APP_NAME = "AndroidNotes";
     private final EvernoteSession evernoteSession;
     private final SharedPreferences preferences;
     private List<String> tagNames = new ArrayList<String>();
+    private String notebookGuid;
 
 
     public EvernoteNoteRepository(Context context, EvernoteSession session) {
@@ -97,6 +102,9 @@ public class EvernoteNoteRepository implements INoteRepository {
     }
 
     private com.evernote.edam.type.Note convertToEvernote(Note note) {
+        NoteAttributes attributes = new NoteAttributes();
+        attributes.setSourceApplication(APP_NAME);
+
         com.evernote.edam.type.Note enNote = new com.evernote.edam.type.Note();
         enNote.setTitle(note.getTitle());
         // todo: content
@@ -104,6 +112,7 @@ public class EvernoteNoteRepository implements INoteRepository {
         enNote.setUpdated(note.getModified().getTime());
         enNote.setGuid(note.getGuid());
         enNote.setTagNames(tagNames);
+        enNote.setAttributes(attributes);
         return enNote;
     }
 
@@ -180,7 +189,8 @@ public class EvernoteNoteRepository implements INoteRepository {
         preferences.edit().putInt(KEY_LAST_UPDATE_COUNT, updateCount).apply();
     }
 
-    private List<Note> convertToDomainNotes(List<com.evernote.edam.type.Note> notes) {
+    private List<Note> convertToDomainNotes(List<com.evernote.edam.type.Note> notes)
+            throws TException, EDAMUserException, EDAMSystemException {
         List<Note> result = new ArrayList<Note>();
         if (notes == null)  return result;
 
@@ -190,17 +200,20 @@ public class EvernoteNoteRepository implements INoteRepository {
             Note note = convertToDomainNote(enNote);
             result.add(note);
         }
+
+        Log.i(TAG, "notes in chunk: " + notes.toString());
+        Log.i(TAG, "notes return: " + result.toString());
         return result;
     }
 
-    private boolean isNoteTracked(com.evernote.edam.type.Note enNote) {
-        List<String> tags = enNote.getTagNames();
-        if (tags == null)  return false;
-
-        for (String tagName : tagNames) {
-            if (!tags.contains(tagName))  return false;
+    private boolean isNoteTracked(com.evernote.edam.type.Note enNote)
+            throws TException, EDAMUserException, EDAMSystemException {
+        if (notebookGuid == null) {
+            Notebook notebook = getNoteStore().getDefaultNotebook(getAuthToken());
+            notebookGuid = notebook.getGuid();
         }
-        return true;
+        return enNote.getNotebookGuid().equals(notebookGuid)
+                && enNote.getAttributes().getSourceApplication().equals(APP_NAME);
     }
 
     private List<Note> createDeletedNotes(List<String> expungedNotes) {

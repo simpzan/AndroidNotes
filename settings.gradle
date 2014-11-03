@@ -1,2 +1,3 @@
-include ':app', ':domain', ':db', ':evernote'
+include ':app', ':domain', ':db', ':evernote', ':evernote-sdk-android'
 include ':evernote/libs/evernote-sdk-android'
+project(':evernote-sdk-android').projectDir = new File('evernote/libs/evernote-sdk-android')
