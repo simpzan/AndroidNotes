@@ -16,7 +16,6 @@ import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.evernote.client.android.EvernoteSession;
 import com.evernote.client.android.InvalidAuthenticationException;
@@ -37,8 +36,10 @@ import simpzan.notes.domain.SyncManager;
 public class NoteListActivity extends BaseActivity {
 
     private static final String TAG = NoteListActivity.class.getSimpleName();
-    ListView noteListView;
-    EditText quickInputView;
+    private ListView noteListView;
+    private EditText quickInputView;
+
+    private Menu menu;
 
     @Inject
     EvernoteSession evernoteSession;
@@ -138,8 +139,9 @@ public class NoteListActivity extends BaseActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.note_list, menu);
+    public boolean onCreateOptionsMenu(Menu aMenu) {
+        getMenuInflater().inflate(R.menu.note_list, aMenu);
+        menu = aMenu;
         return true;
     }
 
@@ -148,15 +150,14 @@ public class NoteListActivity extends BaseActivity {
         int id = item.getItemId();
         if (id == R.id.action_full_sync) {
             fullSync();
-            return true;
-        } else if (id == R.id.action_logout) {
-            logout();
-            return true;
         } else if (id == R.id.action_sync) {
             incrementalSync();
-            return true;
+        } else if (id == R.id.action_logout) {
+            logout();
+        } else {
+            return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
+        return true;
     }
 
     private void fullSync() {
@@ -182,6 +183,7 @@ public class NoteListActivity extends BaseActivity {
     }
 
     private void syncWithEvernote() {
+        updateMenuForSyncBegin();
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
@@ -196,8 +198,21 @@ public class NoteListActivity extends BaseActivity {
                 super.onPostExecute(aVoid);
                 updateViews();
                 makeToast("Syncing done");
+                updateMenuForSyncEnd();
             }
         }.execute();
+    }
+
+    private void updateMenuForSyncEnd() {
+        MenuItem item = menu.findItem(R.id.action_sync);
+        item.setTitle(R.string.action_sync);
+        item.setEnabled(true);
+    }
+
+    private void updateMenuForSyncBegin() {
+        MenuItem item = menu.findItem(R.id.action_sync);
+        item.setTitle(R.string.syncing);
+        item.setEnabled(false);
     }
 
     @Override

@@ -22,7 +22,7 @@ import simpzan.notes.domain.NoteManager;
 public class NoteDetailActivity extends BaseActivity {
 
     public static final String NOTE_ID = "note_id";
-    private static final String TAG = NoteDetailActivity.class.getSimpleName();
+    private static final String TAG = NoteDetailActivity.class.getName();
 
     @Inject
     AsyncNoteManager asyncNoteManager;

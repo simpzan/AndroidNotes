@@ -58,7 +58,7 @@ public class SyncManager {
         List<Note> remoteNotes = remoteRepo.findAllNotes();
         LOGGER.info("downloaded and merging remote notes; " + remoteNotes);
         for (Note remoteNote : remoteNotes) {
-            Note localNote = localRepo.findNoteBy("guid", "\"" + remoteNote.getGuid() +"\"");
+            Note localNote = localRepo.findNoteBy("guid", "'" + remoteNote.getGuid() +"'");
             if (remoteNote.isDeleted()) {    // remote delete
                 handleRemoteDelete(localNote, remoteNote);
             } else if (localNote == null) {    // remote new
