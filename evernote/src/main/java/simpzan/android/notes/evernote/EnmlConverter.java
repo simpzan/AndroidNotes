@@ -19,7 +19,11 @@ import java.util.Set;
  */
 public class EnmlConverter {
     private static final String DOC_TYPE = " en-note SYSTEM 'http://xml.evernote.com/pub/enml2.dtd'";
+    private static final String EN_TODO_TAG = "en-todo";
     private final String EN_NOTE_TAG = "en-note";
+    private final String TODO_MARKDOWN_UNCHECKED = "- [ ] ";
+    private final String TODO_MARKDOWN_CHECKED = "- [x] ";
+    private final String EN_TODO_ATTRIBUTE_CHECKED = "checked";
     private String[] TAGS = {
             "div",
             "h1",
@@ -55,6 +59,10 @@ public class EnmlConverter {
                 builder.append(parser.getText());
             } else if (event == XmlPullParser.END_TAG && tags.contains(parser.getName())) {
                 builder.append("\n");
+            } else if (event == XmlPullParser.START_TAG && EN_TODO_TAG.equals(parser.getName())) {
+                String checkedValue = parser.getAttributeValue(null, EN_TODO_ATTRIBUTE_CHECKED);
+                String checked = "true".equals(checkedValue) ? "x" : " ";
+                builder.append("- [" + checked + "] ");
             }
         }
         return builder.toString();
@@ -86,18 +94,31 @@ public class EnmlConverter {
     }
 
     private void generateEnmlBody(String text, XmlSerializer serializer) throws IOException {
-        String[] lines = text.split("\n");  // remove trailing newlines.
+        String[] lines = text.split("\n");
         for (String line : lines) {
             serializer.startTag("", "div");
-            if (line.length() == 0) {
-                serializer.startTag("", "br");
-                serializer.attribute(null, "clear", "none");
-                serializer.endTag("", "br");
-            } else {
-                serializer.text(line);
-            }
+            generateDivForALine(serializer, line);
             serializer.endTag("", "div");
         }
+    }
+
+    private void generateDivForALine(XmlSerializer serializer, String line) throws IOException {
+        if (line.length() == 0) {
+            serializer.startTag("", "br");
+            serializer.attribute(null, "clear", "none");
+            serializer.endTag("", "br");
+            return;
+        }
+
+        if (line.startsWith(TODO_MARKDOWN_UNCHECKED) || line.startsWith(TODO_MARKDOWN_CHECKED)) {
+            serializer.startTag(null, EN_TODO_TAG);
+            String checkedValue = line.charAt(3) == 'x' ? "true" : "false";
+            serializer.attribute(null, EN_TODO_ATTRIBUTE_CHECKED, checkedValue);
+            serializer.endTag(null, EN_TODO_TAG);
+            line = line.substring(TODO_MARKDOWN_CHECKED.length());
+        }
+
+        serializer.text(line);
     }
 
     private void print(String key, String text) {

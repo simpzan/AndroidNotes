@@ -4,13 +4,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowLog;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -18,14 +15,16 @@ import java.util.Arrays;
 
 @RunWith(RobolectricTestRunner.class)
 public class EnmlConverterTest {
+    private EnmlConverter converter;
+
     @Before
     public void setUp() throws Exception {
         ShadowLog.stream = System.out;
+        converter = new EnmlConverter();
     }
 
     @Test
     public void testEnmlToPlainText() throws Exception {
-        EnmlConverter converter = new EnmlConverter();
         String enml = getFileContent("evernote_note.enml");
         String text = getFileContent("evernote_note.txt");
         String result = converter.enmlToPlainText(enml);
@@ -34,9 +33,27 @@ public class EnmlConverterTest {
 
     @Test
     public void testPlainTextToEnml() throws Exception {
-        EnmlConverter converter = new EnmlConverter();
         String text = getFileContent("evernote_note.txt");
         String enml = converter.plainTextToEnml(text);
+        print("enml", enml);
+        String resultText = converter.enmlToPlainText(enml);
+        Assert.assertEquals(text, resultText);
+    }
+
+    @Test
+    public void testTodoEnmlToPlainText() throws IOException {
+        String enml = getFileContent("evernote_todo.enml");
+        String result_text = converter.enmlToPlainText(enml);
+        String text = getFileContent("evernote_todo.txt");
+        Assert.assertEquals(text, result_text);
+    }
+
+    @Test
+    public void testTodoPlainTextToEnml() throws IOException {
+        String text = getFileContent("evernote_todo.txt");
+        String enml = converter.plainTextToEnml(text);
+        print("enml", enml);
+        Assert.assertTrue(enml.contains("<en-todo"));
         String resultText = converter.enmlToPlainText(enml);
         Assert.assertEquals(text, resultText);
     }

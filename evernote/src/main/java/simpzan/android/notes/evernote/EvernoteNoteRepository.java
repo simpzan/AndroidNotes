@@ -30,8 +30,8 @@ import simpzan.notes.domain.Note;
  */
 public class EvernoteNoteRepository implements INoteRepository {
     private static final String TAG = EvernoteNoteRepository.class.getSimpleName();
-    public static final String CONSUMER_KEY = "simpzan-9925";
-    public static final String CONSUMER_SECRET = "60e4fa505ecb18b2";
+    public static final String CONSUMER_KEY = "simpzan-3633";
+    public static final String CONSUMER_SECRET = "46de261e306c3998";
     private static final String KEY_LAST_UPDATE_COUNT = "last_update_count";
     private static final String APP_NAME = "AndroidNotes";
 

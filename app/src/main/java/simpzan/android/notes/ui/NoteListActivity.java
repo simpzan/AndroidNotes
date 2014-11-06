@@ -247,12 +247,11 @@ public class NoteListActivity extends BaseActivity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            TextView textView;
-            if (convertView == null) {
+            TextView textView = (TextView) convertView;
+            if (textView == null) {
                 textView = (TextView) getLayoutInflater().inflate(android.R.layout.simple_list_item_1, parent, false);
-            } else {
-                textView = (TextView) convertView;
             }
+
             Note note = notes.get(position);
             textView.setText(note.getTitle());
             return textView;

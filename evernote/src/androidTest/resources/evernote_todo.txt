@@ -1,2 +1,5 @@
-[]todo1
-[*]todo2
+first
+
+- [ ] todo1
+- [x] todo2
+end of line
