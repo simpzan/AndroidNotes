@@ -32,22 +32,19 @@ public class EvernoteNoteRepository implements INoteRepository {
     private static final String TAG = EvernoteNoteRepository.class.getSimpleName();
     public static final String CONSUMER_KEY = "simpzan-9925";
     public static final String CONSUMER_SECRET = "60e4fa505ecb18b2";
-    public static final String NOTE_PREFIX =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-            "<!DOCTYPE en-note SYSTEM \"http://xml.evernote.com/pub/enml2.dtd\">" +
-            "<en-note>";
-    public static final String NOTE_SUFFIX = "</en-note>";
     private static final String KEY_LAST_UPDATE_COUNT = "last_update_count";
     private static final String APP_NAME = "AndroidNotes";
 
     private final EvernoteSession evernoteSession;
     private final SharedPreferences preferences;
+    private final EnmlConverter enmlConverter;
     private String notebookGuid;
 
 
     public EvernoteNoteRepository(Context context, EvernoteSession session) {
         this.evernoteSession = session;
         preferences = context.getApplicationContext().getSharedPreferences(TAG, 0);
+        enmlConverter = new EnmlConverter();
     }
 
     private NoteStore.Client getNoteStore() {
@@ -95,8 +92,7 @@ public class EvernoteNoteRepository implements INoteRepository {
 
         com.evernote.edam.type.Note enNote = new com.evernote.edam.type.Note();
         enNote.setTitle(note.getTitle());
-        // todo: content
-        enNote.setContent(NOTE_PREFIX + NOTE_SUFFIX);
+        enNote.setContent(enmlConverter.plainTextToEnml(note.getContent()));
         enNote.setUpdated(note.getModified().getTime());
         enNote.setGuid(note.getGuid());
         enNote.setAttributes(attributes);
@@ -106,9 +102,9 @@ public class EvernoteNoteRepository implements INoteRepository {
     private Note convertToDomainNote(com.evernote.edam.type.Note enNote)
             throws EDAMUserException, EDAMSystemException, TException, EDAMNotFoundException {
         Note note = new Note(enNote.getTitle());
-        // todo: content
         String content = getNoteStore().getNoteContent(getAuthToken(), enNote.getGuid());
         Log.d(TAG, content);
+        note.setContent(enmlConverter.enmlToPlainText(content));
         note.setModified(new Date(enNote.getUpdated()));
         note.setGuid(enNote.getGuid());
         note.setUpdateSequenceNumber(enNote.getUpdateSequenceNum());
