@@ -79,7 +79,8 @@ public class SqliteNoteRepository extends SQLiteOpenHelper implements INoteRepos
 
     private Cursor getQueryCursor(String field, String value) {
         String where = field + " = " + value;
-        Cursor cursor = getReadableDatabase().query(TABLE_NOTES, null, where, null, null, null, null);
+        String orderBy = COLUMN_MODIFIED + " desc";
+        Cursor cursor = getReadableDatabase().query(TABLE_NOTES, null, where, null, null, null, orderBy);
         if (cursor.getCount() > 0)  return cursor;
 
         cursor.close();

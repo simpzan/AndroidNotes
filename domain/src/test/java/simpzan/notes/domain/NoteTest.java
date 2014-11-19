@@ -36,4 +36,11 @@ public class NoteTest {
 
         Assert.assertEquals(n1, n2);
     }
+
+    @Test
+    public void copyTest() {
+        Note expected = new Note("title");
+        Note actual = new Note(expected);
+        Assert.assertEquals(expected, actual);
+    }
 }

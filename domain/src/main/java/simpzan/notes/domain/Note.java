@@ -1,12 +1,25 @@
 package simpzan.notes.domain;
 
 import java.util.Date;
+import java.util.List;
 
 import simpzan.common.StringUtil;
 
 public class Note {
+    public enum NoteType {
+        PlainNote,
+        TodoNote,
+        MarkdownNote,
+    }
     private String title;
     private String content;
+
+    public NoteType getContentType() {
+        boolean isTodoNote = getContent().contains(TodoNoteMapper.TODO_MARKDOWN_CHECKED)
+                || getContent().contains(TodoNoteMapper.TODO_MARKDOWN_UNCHECKED);
+        return isTodoNote ? NoteType.TodoNote : NoteType.PlainNote;
+    }
+
     private Date modified;
     private long id;
 
@@ -15,10 +28,44 @@ public class Note {
     private boolean deleted;
     private boolean dirty = true;
 
+    private static TodoNoteMapper todoNoteMapper = new TodoNoteMapper();
+
     public Note(String title) {
         this.title = title;
         this.modified = new Date();
         this.content = "";
+    }
+
+    public Note(Note note) {
+        this.title = note.title;
+        this.content = note.content;
+        this.modified = note.modified;
+        this.id = note.id;
+
+        this.guid = note.guid;
+        this.updateSequenceNumber = note.updateSequenceNumber;
+        this.deleted = note.deleted;
+        this.dirty = note.dirty;
+    }
+
+    public String getPlainTextContent() {
+        if (getContentType() == NoteType.PlainNote)  return getContent();
+
+        // contentType == NoteType.TodoNote
+        StringBuilder builder = new StringBuilder();
+        List<TodoNoteMapper.TodoItem> items = getTodoItems();
+        for (TodoNoteMapper.TodoItem item : items) {
+            builder.append(item.content).append('\n');
+        }
+        return builder.toString();
+    }
+
+    public List<TodoNoteMapper.TodoItem> getTodoItems() {
+        return todoNoteMapper.deserialze(getContent());
+    }
+
+    public void setTodoItems(List<TodoNoteMapper.TodoItem> items) {
+        setContent(todoNoteMapper.serialize(items));
     }
 
     public boolean isUpdated() {
@@ -102,6 +149,20 @@ public class Note {
     }
 
     @Override
+    public String toString() {
+        return "Note{" +
+                "title='" + title + '\'' +
+                ", content='" + content + '\'' +
+                ", modified=" + modified +
+                ", id=" + id +
+                ", guid='" + guid + '\'' +
+                ", updateSequenceNumber=" + updateSequenceNumber +
+                ", deleted=" + deleted +
+                ", dirty=" + dirty +
+                '}';
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -110,10 +171,10 @@ public class Note {
 
         if (deleted != note.deleted) return false;
         if (dirty != note.dirty) return false;
-        if (guid != note.guid) return false;
         if (id != note.id) return false;
         if (updateSequenceNumber != note.updateSequenceNumber) return false;
         if (content != null ? !content.equals(note.content) : note.content != null) return false;
+        if (guid != null ? !guid.equals(note.guid) : note.guid != null) return false;
         if (!modified.equals(note.modified)) return false;
         if (!title.equals(note.title)) return false;
 
@@ -131,20 +192,6 @@ public class Note {
         result = 31 * result + (deleted ? 1 : 0);
         result = 31 * result + (dirty ? 1 : 0);
         return result;
-    }
-
-    @Override
-    public String toString() {
-        return "Note{" +
-                "title='" + title + '\'' +
-                ", content='" + content + '\'' +
-                ", modified=" + modified +
-                ", id=" + id +
-                ", guid=" + guid +
-                ", updateSequenceNumber=" + updateSequenceNumber +
-                ", deleted=" + deleted +
-                ", dirty=" + dirty +
-                '}';
     }
 
 }
