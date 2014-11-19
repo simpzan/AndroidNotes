@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import simpzan.notes.domain.TodoNoteMapper;
+
 /**
  * Created by guoqing.zgg on 2014/11/5.
  */
@@ -21,8 +23,6 @@ public class EnmlConverter {
     private static final String DOC_TYPE = " en-note SYSTEM 'http://xml.evernote.com/pub/enml2.dtd'";
     private static final String EN_TODO_TAG = "en-todo";
     private final String EN_NOTE_TAG = "en-note";
-    private final String TODO_MARKDOWN_UNCHECKED = "- [ ] ";
-    private final String TODO_MARKDOWN_CHECKED = "- [x] ";
     private final String EN_TODO_ATTRIBUTE_CHECKED = "checked";
     private String[] TAGS = {
             "div",
@@ -110,12 +110,13 @@ public class EnmlConverter {
             return;
         }
 
-        if (line.startsWith(TODO_MARKDOWN_UNCHECKED) || line.startsWith(TODO_MARKDOWN_CHECKED)) {
+        if (line.startsWith(TodoNoteMapper.TODO_MARKDOWN_UNCHECKED) || line.startsWith(TodoNoteMapper.TODO_MARKDOWN_CHECKED)) {
             serializer.startTag(null, EN_TODO_TAG);
-            String checkedValue = line.charAt(3) == 'x' ? "true" : "false";
+            boolean checked = line.charAt(TodoNoteMapper.TODO_MARKDOWN_CHECK_CHAR_INDEX) == 'x';
+            String checkedValue = checked ? "true" : "false";
             serializer.attribute(null, EN_TODO_ATTRIBUTE_CHECKED, checkedValue);
             serializer.endTag(null, EN_TODO_TAG);
-            line = line.substring(TODO_MARKDOWN_CHECKED.length());
+            line = line.substring(TodoNoteMapper.TODO_MARKDOWN_CHECKED.length());
         }
 
         serializer.text(line);

@@ -29,9 +29,10 @@ import simpzan.notes.domain.Note;
  * Note repository for evernote web service api.
  */
 public class EvernoteNoteRepository implements INoteRepository {
+    public static final String CONSUMER_KEY = "simpzan-7209";
+    public static final String CONSUMER_SECRET = "121c7a50e0aab9fd";
+
     private static final String TAG = EvernoteNoteRepository.class.getSimpleName();
-    public static final String CONSUMER_KEY = "simpzan-3633";
-    public static final String CONSUMER_SECRET = "46de261e306c3998";
     private static final String KEY_LAST_UPDATE_COUNT = "last_update_count";
     private static final String APP_NAME = "AndroidNotes";
 
