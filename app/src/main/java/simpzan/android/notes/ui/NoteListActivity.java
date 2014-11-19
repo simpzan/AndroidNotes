@@ -51,21 +51,12 @@ public class NoteListActivity extends BaseActivity {
     @Inject
     AsyncNoteManager asyncNoteManager;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_list);
 
         initViews();
-    }
-
-    private void test() {
-        Logger logger = Logger.getLogger(NoteListActivity.class.getName());
-//        logger.setLevel(Level.FINEST);
-        Locale locale = Locale.getDefault();
-        logger.info("default locale:" + locale);
-        Log.d(TAG, "default locale:" + locale);
     }
 
     @Override
@@ -124,7 +115,7 @@ public class NoteListActivity extends BaseActivity {
     }
 
     private void updateViews() {
-        asyncNoteManager.findAllNotes(new AsyncNoteManager.CallBack<List<Note>>() {
+        asyncNoteManager.findActiveNotes(new AsyncNoteManager.CallBack<List<Note>>() {
             @Override
             public void onSuccess(List<Note> notes) {
                 ListAdapter adapter = new NoteListAdapter(notes);

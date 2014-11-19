@@ -10,12 +10,14 @@
     tools:context="simpzan.android.notes.ui.NoteDetailActivity"
     android:orientation="vertical">
     <EditText
+        android:background="@android:color/transparent"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:id="@+id/titleView"
         android:singleLine="false"/>
     <EditText
         android:text="Test texts"
+        android:background="@android:color/transparent"
         android:gravity="top"
         android:id="@+id/contentView"
         android:layout_width="fill_parent"

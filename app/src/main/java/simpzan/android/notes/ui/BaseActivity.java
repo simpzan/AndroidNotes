@@ -18,6 +18,6 @@ public class BaseActivity extends Activity {
     }
 
     protected void makeToast(String text) {
-        Toast.makeText(this, text, Toast.LENGTH_LONG);
+        Toast.makeText(this, text, Toast.LENGTH_LONG).show();
     }
 }

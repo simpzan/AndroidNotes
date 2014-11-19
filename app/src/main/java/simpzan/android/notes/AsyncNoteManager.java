@@ -72,6 +72,16 @@ public class AsyncNoteManager {
         });
     }
 
+    public void findActiveNotes(final CallBack<List<Note>> callBack) {
+        backgroundExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                final List<Note> notes = noteManager.findActiveNotes();
+                new MainThreadNotifier<List<Note>>().notify(notes, callBack);
+            }
+        });
+    }
+
     public void deleteNote(final Note note, final CallBack<Integer> callBack) {
         backgroundExecutor.execute(new Runnable() {
             @Override
