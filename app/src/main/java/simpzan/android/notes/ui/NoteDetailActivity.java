@@ -1,11 +1,14 @@
 package simpzan.android.notes.ui;
 
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 
 import javax.inject.Inject;
 
@@ -14,8 +17,6 @@ import simpzan.android.notes.R;
 import simpzan.notes.domain.Note;
 
 public class NoteDetailActivity extends BaseActivity {
-
-    private boolean noteSaved;
 
     public interface NoteContentView {
         public void setNote(Note note);
@@ -27,7 +28,9 @@ public class NoteDetailActivity extends BaseActivity {
     private static final String TAG = NoteDetailActivity.class.getName();
     private NoteContentFragment noteContentFragment;
     private TodoNoteContentFragment todoNoteContentFragment;
-    private Note note;
+    private Note noteBackup;
+    private Note noteEditing;
+    private boolean noteSaved;
 
     @Inject
     AsyncNoteManager asyncNoteManager;
@@ -37,7 +40,7 @@ public class NoteDetailActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_container);
 
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+//        getActionBar().setDisplayHomeAsUpEnabled(true);
         loadNote();
     }
 
@@ -67,12 +70,38 @@ public class NoteDetailActivity extends BaseActivity {
             return true;
         } else if (id == android.R.id.home) {
             finish();
+        } else if (id == R.id.action_rename_title) {
+            promptRenameNoteTitle();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    private void promptRenameNoteTitle() {
+        final EditText input = new EditText(this);
+        input.setText(noteEditing.getTitle());
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle(getString(R.string.action_rename_title));
+        alert.setView(input);
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                String value = input.getText().toString();
+                noteEditing.setTitle(value);
+                setTitle(value);
+            }
+        });
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // Canceled.
+            }
+        });
+        alert.show();
+    }
+
     private void setupFragment() {
-        Note aNote = new Note(note);
+        Note aNote = new Note(noteBackup);
+        noteEditing = aNote;
         noteContentFragment = new NoteContentFragment();
         noteContentFragment.setNote(aNote);
         todoNoteContentFragment = new TodoNoteContentFragment();
@@ -99,8 +128,8 @@ public class NoteDetailActivity extends BaseActivity {
     }
 
     private void deleteNote() {
-        note.setDeleted(true);
-        asyncNoteManager.saveNote(note, new AsyncNoteManager.CallBack<Note>() {
+        noteBackup.setDeleted(true);
+        asyncNoteManager.saveNote(noteBackup, new AsyncNoteManager.CallBack<Note>() {
             @Override
             public void onSuccess(Note data) {
                 Log.d(TAG, "note mark deleted:" + data);
@@ -128,7 +157,8 @@ public class NoteDetailActivity extends BaseActivity {
         asyncNoteManager.findNoteById(note_id, new AsyncNoteManager.CallBack<Note>() {
             @Override
             public void onSuccess(Note aNote) {
-                note = aNote;
+                noteBackup = aNote;
+                setTitle(noteBackup.getTitle());
                 setupFragment();
             }
 
@@ -143,13 +173,13 @@ public class NoteDetailActivity extends BaseActivity {
         if (noteContentFragment == null || noteSaved) return;
 
         final Note noteAfter = noteContentFragment.isHidden() ? todoNoteContentFragment.getNote() : noteContentFragment.getNote();
-        if (note.equals(noteAfter)) return;
+        if (noteBackup.equals(noteAfter)) return;
 
         asyncNoteManager.saveNote(noteAfter, new AsyncNoteManager.CallBack<Note>() {
             @Override
             public void onSuccess(Note data) {
                 makeToast("note saved!");
-                Log.v(TAG, "before:" + note + "\nafter:" + data);
+                Log.v(TAG, "before:" + noteBackup + "\nafter:" + data);
             }
 
             @Override

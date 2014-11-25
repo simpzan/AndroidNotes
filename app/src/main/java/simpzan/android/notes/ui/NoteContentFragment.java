@@ -17,7 +17,6 @@ import simpzan.notes.domain.Note;
 public class NoteContentFragment extends Fragment implements NoteDetailActivity.NoteContentView {
     private static final String TAG = NoteContentFragment.class.getName();
 
-    private EditText titleView;
     private EditText contentView;
 
     private Note note;
@@ -28,7 +27,6 @@ public class NoteContentFragment extends Fragment implements NoteDetailActivity.
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.activity_note_detail, container, false);
-        titleView = (EditText)view.findViewById(R.id.titleView);
         contentView = (EditText)view.findViewById(R.id.contentView);
         return view;
     }
@@ -45,7 +43,7 @@ public class NoteContentFragment extends Fragment implements NoteDetailActivity.
 
         Log.e(TAG, "hidden changed:" + hidden + "  note:" + note);
 
-        if (titleView == null)  return;
+        if (contentView == null)  return;
         if (hidden) {
             getNote();
         } else {
@@ -55,9 +53,8 @@ public class NoteContentFragment extends Fragment implements NoteDetailActivity.
 
     private void updateViews() {
         Log.d(TAG, "update views with note:" + note);
-        if (titleView == null || note == null)  return;
+        if (contentView == null || note == null)  return;
 
-        titleView.setText(note.getTitle());
         contentView.setText(note.getPlainTextContent());
     }
 
@@ -70,9 +67,7 @@ public class NoteContentFragment extends Fragment implements NoteDetailActivity.
     @Override
     public Note getNote() {
         if (note == null)   return null;
-        String title = titleView.getText().toString();
         String content = contentView.getText().toString();
-        note.setTitle(title);
         note.setContent(content);
         return note;
     }

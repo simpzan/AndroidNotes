@@ -14,5 +14,6 @@
     <string name="action_hide_checkbox">Hide Checkboxes</string>
     <string name="action_delete_note">Delete Note</string>
     <string name="action_clear_completed">Clear Completed Todo Items</string>
+    <string name="action_rename_title">Rename Title</string>
 
 </resources>
