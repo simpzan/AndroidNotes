@@ -40,6 +40,7 @@ public class NoteListActivity extends BaseActivity {
     private EditText quickInputView;
 
     private Menu menu;
+    private NoteListAdapter listAdapter;
 
     @Inject
     EvernoteSession evernoteSession;
@@ -74,6 +75,8 @@ public class NoteListActivity extends BaseActivity {
                 openNoteDetailActivity(note);
             }
         });
+        addSwipeDeleteSupport();
+
         quickInputView = (EditText) findViewById(R.id.editText);
         quickInputView.setOnKeyListener(new View.OnKeyListener() {
             @Override
@@ -85,6 +88,45 @@ public class NoteListActivity extends BaseActivity {
                     return true;
                 }
                 return false;
+            }
+        });
+    }
+
+    private void addSwipeDeleteSupport() {
+        SwipeDismissListViewTouchListener swipeListener = new SwipeDismissListViewTouchListener(noteListView,
+                new SwipeDismissListViewTouchListener.DismissCallbacks() {
+
+                    @Override public boolean canDismiss(int position) {   return true;    }
+
+                    @Override
+                    public void onDismiss(ListView listView, int[] reverseSortedPositions) {
+                        int pos = reverseSortedPositions[0];
+                        Note note = (Note) noteListView.getItemAtPosition(pos);
+                        deleteNote(note);
+                    }
+                }
+        );
+        noteListView.setOnTouchListener(swipeListener);
+        noteListView.setOnScrollListener(swipeListener.makeScrollListener());
+    }
+
+    private void deleteNote(Note note) {
+        // hack: remove the note in RAM right away to avoid UI flash caused by SwipeDismissListView.
+        listAdapter.removeNote(note);
+        listAdapter.notifyDataSetChanged();
+
+        note.setDeleted(true);
+        asyncNoteManager.saveNote(note, new AsyncNoteManager.CallBack<Note>() {
+            @Override
+            public void onSuccess(Note data) {
+                Log.d(TAG, "note mark deleted:" + data);
+                makeToast("note deleted: " + data.getTitle());
+//                updateViews();    // the note is already removed in RAM and UI, so no need to refresh UI.
+            }
+
+            @Override public void onException(Exception exception) {
+                makeToast("note delete failed");
+                updateViews();  // note delete failed. the note should be add to RAM and UI. To fulfill this, we reload from db.
             }
         });
     }
@@ -118,8 +160,8 @@ public class NoteListActivity extends BaseActivity {
         asyncNoteManager.findActiveNotes(new AsyncNoteManager.CallBack<List<Note>>() {
             @Override
             public void onSuccess(List<Note> notes) {
-                ListAdapter adapter = new NoteListAdapter(notes);
-                noteListView.setAdapter(adapter);
+                listAdapter = new NoteListAdapter(notes);
+                noteListView.setAdapter(listAdapter);
             }
 
             @Override
@@ -217,24 +259,15 @@ public class NoteListActivity extends BaseActivity {
     private class NoteListAdapter extends BaseAdapter {
         private final List<Note> notes;
 
-        NoteListAdapter(List<Note> notes) {
-            this.notes = notes;
-        }
+        NoteListAdapter(List<Note> notes) { this.notes = notes; }
 
-        @Override
-        public int getCount() {
-            return notes.size();
-        }
+        public void removeNote(Note note) { notes.remove(note); }
 
-        @Override
-        public Object getItem(int position) {
-            return notes.get(position);
-        }
+        @Override public int getCount() { return notes.size(); }
 
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
+        @Override public Object getItem(int position) { return notes.get(position); }
+
+        @Override public long getItemId(int position) { return position; }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
